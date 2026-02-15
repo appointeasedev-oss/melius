@@ -13,50 +13,39 @@ class Agent:
         self.tools = ToolRegistry()
         self.memory = Memory(name)
         
-        self.system_prompt = f"""You are {self.name}, an advanced AI agent.
-Role: {self.role}
-System: Melius (Headless, Local, Self-Improving)
+        self.system_prompt = f"""You are {self.name}, an autonomous AI agent within the Melius system.
+Your Role: {self.role}
 
-Capabilities:
-1. Use existing tools (listed below).
-2. Propose new tools if a capability is missing.
-3. Spawn sub-agents for specialized tasks.
-4. Maintain long-term and short-term memory.
+OPERATIONAL GUIDELINES:
+1. THINK before acting. Plan your steps in a 'Thought' block.
+2. USE TOOLS whenever possible to interact with the world.
+3. SELF-IMPROVE: If a task requires a tool you don't have, check the /tools folder. If missing, propose creating a new tool.
+4. MULTI-AGENT: You can delegate complex sub-tasks to specialized sub-agents.
+5. MEMORY: You have access to short-term context and long-term facts. Use them to maintain consistency.
 
-Available Tools:
+AVAILABLE TOOLS:
 {json.dumps(self.tools.get_definitions(), indent=2)}
 
-Guidelines:
-- Before creating a tool, CHECK if one already exists.
-- If you need a sub-agent, define its name and specific role.
-- Respond with a 'thought' and an 'action' (tool_use, create_agent, or create_tool).
+RESPONSE FORMAT:
+Always structure your response as:
+Thought: [Your reasoning]
+Action: [tool_use | create_agent | create_tool | final_answer]
+Parameters: [JSON parameters for the action]
 """
 
-    def think(self, user_input: str) -> Dict[str, Any]:
+    def think(self, user_input: str) -> str:
         self.memory.add_interaction("user", user_input)
         context = self.memory.get_context()
         context.insert(0, {"role": "system", "content": self.system_prompt})
         
-        raw_response = self.ollama.chat(self.model, context)
-        self.memory.add_interaction("assistant", raw_response)
-        
-        # In a production system, we'd use structured output (JSON mode)
-        # Here we simulate parsing the response
-        return {"response": raw_response}
+        response = self.ollama.chat(self.model, context)
+        self.memory.add_interaction("assistant", response)
+        return response
 
 class Orchestrator:
     def __init__(self, model: str = "llama3"):
         self.main_agent = Agent("Melius-Prime", "Orchestrator", model)
         self.sub_agents: Dict[str, Agent] = {}
 
-    def handle_task(self, task: str):
-        # Initial thought process
-        result = self.main_agent.think(task)
-        return result["response"]
-
-    def create_sub_agent(self, name: str, role: str, model: Optional[str] = None):
-        if name in self.sub_agents:
-            return f"Agent {name} already exists."
-        new_agent = Agent(name, role, model or self.main_agent.model)
-        self.sub_agents[name] = new_agent
-        return f"Sub-agent {name} initialized as {role}."
+    def handle_task(self, task: str) -> str:
+        return self.main_agent.think(task)
