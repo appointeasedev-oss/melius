@@ -36,6 +36,7 @@ cd melius
 ```
 
 **On Windows:**
+Simply run the `setup.bat` file. It will automatically check for **Ollama**, and if it's missing, it will download and install it for you before setting up the Melius environment.
 ```bash
 ./setup.bat
 ```

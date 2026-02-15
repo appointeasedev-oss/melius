@@ -73,8 +73,11 @@ def setup():
     
     # Check Ollama
     ok, msg = ollama.check_ollama()
-    status = "[green]OK[/green]" if ok else "[red]FAILED[/red]"
-    console.print(f"Ollama Status: {status} - {msg}")
+    if not ok:
+        console.print(f"Ollama Status: [red]FAILED[/red] - {msg}")
+        console.print("[yellow]Note: The setup.bat script handles automated Ollama installation on Windows.[/yellow]")
+    else:
+        console.print(f"Ollama Status: [green]OK[/green] - {msg}")
     
     # Check GH CLI
     gh_check = os.system("gh --version > nul 2>&1")
