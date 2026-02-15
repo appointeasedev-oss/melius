@@ -2,32 +2,41 @@ import click
 import sys
 import os
 from rich.console import Console
+from rich.panel import Panel
 from rich.table import Table
 from .ollama_manager import OllamaManager
-from .engine import AgentEngine
+from .agent import Orchestrator
+from .config import Config
 
 console = Console()
 ollama = OllamaManager()
 
-@click.group()
-def cli():
-    """Melius: A headless, local-first AI agent CLI."""
-    pass
+@click.group(invoke_without_command=True)
+@click.pass_context
+def cli(ctx):
+    """Melius: The Ultimate Headless Local AI Agent.
+    
+    If no command is provided, starts the interactive session.
+    """
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(start)
 
 @cli.command()
-@click.option("--model", default="llama3", help="Ollama model to use")
+@click.option("--model", default=Config.DEFAULT_MODEL, help="Ollama model to use")
 def start(model):
-    """Start the Melius agent in interactive mode."""
-    console.print(f"[bold green]Melius Agent Starting with model: {model}[/bold green]")
+    """Start the Melius Orchestrator in interactive mode."""
+    console.print(Panel.fit("[bold cyan]Melius Prime Online[/bold cyan]\n[dim]Local. Headless. Self-Improving.[/dim]", border_style="blue"))
     
-    # Check Ollama status
+    # Check Ollama
     ok, msg = ollama.check_ollama()
     if not ok:
         console.print(f"[bold red]Error:[/bold red] {msg}")
+        console.print("[yellow]Tip: Run 'melius setup' to check requirements.[/yellow]")
         return
 
-    engine = AgentEngine(model=model)
-    console.print("Type your instructions or 'exit' to quit.")
+    orchestrator = Orchestrator(model=model)
+    console.print(f"[green]Using model:[/green] {model}")
+    console.print("[dim]Type 'exit' to quit, 'help' for agent capabilities.[/dim]\n")
     
     while True:
         try:
@@ -35,53 +44,54 @@ def start(model):
             if user_input.lower() in ["exit", "quit"]:
                 break
             
-            with console.status("[bold blue]Thinking..."):
-                response = engine.process_query(user_input)
+            with console.status("[bold blue]Processing..."):
+                response = orchestrator.handle_task(user_input)
             
-            console.print(f"\n[bold green]Melius:[/bold green]\n{response}\n")
+            console.print(f"\n[bold cyan]Melius:[/bold cyan]\n{response}\n")
         except KeyboardInterrupt:
             break
 
 @cli.command()
-def list_models():
-    """List available Ollama models."""
-    models = ollama.list_models()
-    if not models:
-        console.print("[yellow]No models found or Ollama not running.[/yellow]")
-        return
+def list_tools():
+    """List all currently registered tools and skills."""
+    from .tools import ToolRegistry
+    registry = ToolRegistry()
+    table = Table(title="Melius Tool Registry")
+    table.add_column("Tool Name", style="cyan")
+    table.add_column("Description", style="white")
     
-    table = Table(title="Available Ollama Models")
-    table.add_column("Model Name", style="cyan")
-    for m in models:
-        table.add_row(m)
+    for tool in registry.tools.values():
+        table.add_row(tool.name, tool.description)
+    
     console.print(table)
 
 @cli.command()
-@click.argument("model")
-def download(model):
-    """Download a model from Ollama."""
-    console.print(f"[blue]Downloading {model}...[/blue]")
-    if ollama.pull_model(model):
-        console.print(f"[green]Successfully downloaded {model}[/green]")
-    else:
-        console.print(f"[red]Failed to download {model}[/red]")
+def setup():
+    """Run production-ready setup and environment check."""
+    console.print("[bold blue]Running Melius Environment Check...[/bold blue]")
+    Config.ensure_dirs()
+    
+    # Check Ollama
+    ok, msg = ollama.check_ollama()
+    status = "[green]OK[/green]" if ok else "[red]FAILED[/red]"
+    console.print(f"Ollama Status: {status} - {msg}")
+    
+    # Check GH CLI
+    gh_check = os.system("gh --version > nul 2>&1")
+    gh_status = "[green]OK[/green]" if gh_check == 0 else "[yellow]NOT FOUND[/yellow]"
+    console.print(f"GitHub CLI: {gh_status}")
+    
+    console.print("\n[bold green]Setup complete![/bold green] You can now run 'melius start'.")
 
 @cli.command()
-def setup():
-    """Initial setup for Melius."""
-    console.print("[bold blue]Setting up Melius...[/bold blue]")
-    # Create necessary folders
-    folders = ["workspace", "memory", "agents", "models", "tools"]
-    for folder in folders:
-        os.makedirs(folder, exist_ok=True)
-        console.print(f"Created folder: {folder}")
-    
-    ok, msg = ollama.check_ollama()
-    if not ok:
-        console.print(f"[yellow]Note: {msg}[/yellow]")
-        console.print("Please install Ollama from https://ollama.com to use Melius.")
+@click.argument("model_name")
+def download(model_name):
+    """Download a specific model via Ollama."""
+    console.print(f"Pulling model: {model_name}...")
+    if ollama.pull_model(model_name):
+        console.print(f"[green]Successfully downloaded {model_name}[/green]")
     else:
-        console.print("[green]Ollama is ready![/green]")
+        console.print(f"[red]Failed to download {model_name}[/red]")
 
 if __name__ == "__main__":
     cli()
