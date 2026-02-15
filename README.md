@@ -57,6 +57,10 @@ melius download llama3
 
 ## 📖 Usage Instructions
 
+For a complete guide on all commands, advanced usage, and configuration, please refer to the [**Melius User Guide**](GUIDE.md).
+
+
+
 ### Start Interactive Mode
 Launch the main orchestrator:
 ```bash
@@ -86,6 +90,10 @@ You can give Melius complex instructions in natural language:
 - **`/agents/`**: Configurations for specialized sub-agents.
 
 ---
+
+## 📚 Further Documentation
+
+-   [**Melius User Guide**](GUIDE.md): Comprehensive details on all commands, advanced usage, and configuration.
 
 ## 📜 License
 Distributed under the MIT License. See `LICENSE` for more information.
