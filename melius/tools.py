@@ -1,6 +1,8 @@
 import os
 import shutil
 import subprocess
+import importlib
+import sys
 from playwright.sync_api import sync_playwright
 
 class Tool:
@@ -9,56 +11,61 @@ class Tool:
     def execute(self, **kwargs):
         pass
 
-class WriteFileTool(Tool):
-    name = "write_file"
-    description = "Write content to a file in the workspace. Params: path, content"
-    def execute(self, path, content):
-        workspace_path = os.path.join("workspace", path)
-        os.makedirs(os.path.dirname(workspace_path), exist_ok=True)
-        with open(workspace_path, "w") as f:
-            f.write(content)
-        return f"File written to {path}"
-
-class ReadFileTool(Tool):
-    name = "read_file"
-    description = "Read content from a file in the workspace. Params: path"
-    def execute(self, path):
-        workspace_path = os.path.join("workspace", path)
-        if not os.path.exists(workspace_path):
-            return f"Error: File {path} not found."
-        with open(workspace_path, "r") as f:
-            return f.read()
-
-class ShellCommandTool(Tool):
-    name = "shell_command"
-    description = "Execute a shell command. Params: command"
+class GitHubTool(Tool):
+    name = "github_operation"
+    description = "Perform GitHub operations using 'gh' CLI. Params: command (e.g., 'repo view', 'issue list')"
     def execute(self, command):
         try:
-            result = subprocess.run(command, shell=True, capture_output=True, text=True)
+            result = subprocess.run(f"gh {command}", shell=True, capture_output=True, text=True)
             return f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}"
         except Exception as e:
-            return f"Error executing command: {str(e)}"
+            return f"Error: {str(e)}"
 
-class BrowserTool(Tool):
+class BrowserSearchTool(Tool):
     name = "browser_search"
-    description = "Search the web using a browser. Params: url"
+    description = "Search and extract info from a URL. Params: url"
     def execute(self, url):
-        with sync_playwright() as p:
-            browser = p.chromium.launch()
-            page = browser.new_page()
-            page.goto(url)
-            content = page.content()
-            browser.close()
-            return content[:2000] # Return first 2000 chars for context
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                page = browser.new_page()
+                page.goto(url, timeout=60000)
+                content = page.content()
+                browser.close()
+                return content[:5000] # Increased context limit
+        except Exception as e:
+            return f"Error: {str(e)}"
+
+class ToolCreatorTool(Tool):
+    name = "create_tool"
+    description = "Dynamically create a new tool. Params: tool_name, code"
+    def execute(self, tool_name, code):
+        try:
+            tool_path = f"tools/{tool_name}.py"
+            os.makedirs("tools", exist_ok=True)
+            with open(tool_path, "w") as f:
+                f.write(code)
+            return f"Successfully created tool {tool_name} at {tool_path}"
+        except Exception as e:
+            return f"Error: {str(e)}"
 
 class ToolRegistry:
     def __init__(self):
         self.tools = {
-            "write_file": WriteFileTool(),
-            "read_file": ReadFileTool(),
-            "shell_command": ShellCommandTool(),
-            "browser_search": BrowserTool()
+            "github": GitHubTool(),
+            "browser": BrowserSearchTool(),
+            "create_tool": ToolCreatorTool()
         }
+        self._load_dynamic_tools()
+
+    def _load_dynamic_tools(self):
+        if not os.path.exists("tools"):
+            return
+        for filename in os.listdir("tools"):
+            if filename.endswith(".py"):
+                tool_name = filename[:-3]
+                # Dynamic loading logic would go here in a full implementation
+                pass
 
     def get_tool_definitions(self):
         return [

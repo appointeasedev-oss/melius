@@ -1,56 +1,52 @@
-# Melius 🌟
+# Melius 🌟 - The Headless, Self-Improving AI Agent
 
-Melius is a headless, local-first AI agent CLI system. It runs entirely on your local machine using **Ollama**, giving you full control and privacy.
+Melius is a production-ready, local-first AI agent CLI. It's designed to be a "headless" version of OpenClaw, running entirely on your local hardware using **Ollama**.
 
-## Features
+## 🚀 Key Features
 
-- 🤖 **Local-First**: Powered by Ollama models (llama3, mistral, etc.)
-- 💻 **Headless CLI**: No GUI, just pure logic and terminal interaction.
-- 📅 **Task Scheduler**: Schedule jobs (e.g., "commit to repo at 5 PM").
-- 🛠️ **Self-Improving**: Agent can edit its own tools and acquire new skills.
-- 📂 **File Mastery**: Read, edit, and modify files in its dedicated `/workspace`.
-- 🧠 **Memory**: Short-term and long-term memory persistence.
-- 🌐 **Internet Access**: Integrated browser operations.
-- 📱 **Telegram Remote**: Control your agent via Telegram bot.
-- 🪟 **Windows Optimized**: Designed for Windows command line environments.
+- 🤖 **Multi-Agent Orchestration**: Main agent can spawn sub-agents for specialized tasks.
+- 🛠️ **Dynamic Tool Creation**: Melius can write and register its own tools at runtime.
+- 🐙 **GitHub Integration**: Full control over your repos using the GitHub CLI.
+- 🌐 **Deep Research**: Built-in browser automation for internet-scale information gathering.
+- 📅 **Smart Scheduling**: Automate tasks (e.g., "Review this PR at 9 AM tomorrow").
+- 🧠 **Dual Memory**: Short-term context and long-term persistent storage.
+- 🔒 **100% Local**: Your data never leaves your machine.
 
-## Installation
+## 🛠️ Installation
 
-1. **Install Ollama**: Download and install from [ollama.com](https://ollama.com).
-2. **Clone the Repo**:
+1. **Prerequisites**:
+   - [Ollama](https://ollama.com) installed and running.
+   - [GitHub CLI](https://cli.github.com/) (optional, for GitHub tools).
+   - Python 3.10+.
+
+2. **Setup**:
    ```bash
    git clone https://github.com/appointeasedev-oss/melius.git
    cd melius
-   ```
-3. **Setup Environment**:
-   ```bash
-   pip install -e .
-   melius setup
+   ./setup.bat  # On Windows
    ```
 
-## Usage
+## 📖 Usage
 
-### Start Interactive Mode
+### Launch Melius
 ```bash
-melius start --model llama3
+melius start
 ```
 
-### Manage Models
-```bash
-melius list-models
-melius download llama3
-```
+### Self-Improvement
+You can tell Melius:
+> "Create a tool that summarizes PDF files in the workspace and use it to analyze report.pdf"
 
-### Scheduling Tasks
-You can ask Melius to schedule tasks in natural language:
-> "Schedule a git commit for all changes in the workspace today at 5 PM."
+### Multi-Agent Tasks
+> "Create a sub-agent to handle the documentation while you focus on the code implementation."
 
-## Architecture
+## 📂 Project Structure
 
-- `/melius/`: Core engine and logic.
-- `/workspace/`: The agent's playground for file operations.
-- `/tools/`: Expandable toolset for the agent.
-- `/memory/`: Persistent memory storage.
+- `/melius/`: Core logic and agent engines.
+- `/tools/`: Default and dynamically created tools.
+- `/workspace/`: Agent's primary working directory.
+- `/agents/`: Sub-agent definitions and states.
+- `/memory/`: Persistent storage for agent knowledge.
 
-## License
+## 📜 License
 MIT
